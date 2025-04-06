@@ -1,0 +1,77 @@
+﻿<Window x:Class="ChatGalvanometer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChatGalvanometer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="480" Width="640">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="43*"/>
+            <ColumnDefinition Width="37*"/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="connectButton" Content="Connect" HorizontalAlignment="Left" Margin="32,226,0,0" VerticalAlignment="Top" Click="connectButton_Click" Width="75" IsEnabled="{Binding ConnectEnabled}"/>
+        <Button x:Name="getTokenButton" Content="Get Token" HorizontalAlignment="Left" Margin="28,42,0,0" VerticalAlignment="Top" Width="75" Click="getTokenButton_Click"/>
+        <TextBox x:Name="clientIdBox" HorizontalAlignment="Left" Margin="124,43,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="204" Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="clientIdLabel" HorizontalAlignment="Left" Margin="124,27,0,0" TextWrapping="Wrap" Text="Client Id" VerticalAlignment="Top"/>
+        <TextBox x:Name="tokenBox" HorizontalAlignment="Left" Margin="124,86,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="204" Text="{Binding BearerToken, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" FontFamily="OpenSymbol"/>
+        <TextBlock x:Name="tokenLabel" HorizontalAlignment="Left" Margin="124,70,0,0" TextWrapping="Wrap" Text="Token" VerticalAlignment="Top"/>
+        <TextBox x:Name="userNameBox" HorizontalAlignment="Left" Margin="32,136,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="136" Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="UsernameLabel" HorizontalAlignment="Left" Margin="32,120,0,0" TextWrapping="Wrap" Text="Your username" VerticalAlignment="Top"/>
+        <TextBox x:Name="UserIdBox" HorizontalAlignment="Left" Margin="178,136,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="84" IsEnabled="False" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Text="{Binding UserId, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="UserIdLabel" HorizontalAlignment="Left" Margin="178,120,0,0" TextWrapping="Wrap" Text="Your user Id" VerticalAlignment="Top"/>
+        <Button x:Name="UserIdLookupButton" Content="Lookup" HorizontalAlignment="Left" Margin="267,135,0,0" VerticalAlignment="Top" Width="61" IsEnabled="{Binding UserIdLookupEnabled, UpdateSourceTrigger=PropertyChanged}" Click="UserIdLookupButton_Click"/>
+        <TextBox x:Name="BroadcasterNameBox" HorizontalAlignment="Left" Margin="32,187,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="136" Text="{Binding BroadcasterName, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="BroadcasterNameLabel" HorizontalAlignment="Left" Margin="32,171,0,0" TextWrapping="Wrap" Text="Broadcaster username" VerticalAlignment="Top"/>
+        <TextBox x:Name="BroadcasterIdBox" HorizontalAlignment="Left" Margin="178,187,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="84" IsEnabled="False" Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" Text="{Binding BroadcasterId, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="BroadcasterIdLabel" HorizontalAlignment="Left" Margin="178,171,0,0" TextWrapping="Wrap" Text="Broadcaster Id" VerticalAlignment="Top"/>
+        <Button x:Name="BroadcasterIdLookup" Content="Lookup" HorizontalAlignment="Left" Margin="267,186,0,0" VerticalAlignment="Top" Width="61" IsEnabled="{Binding BroadcasterIdLookupEnabled, UpdateSourceTrigger=PropertyChanged}" Click="BroadcasterIdLookup_Click"/>
+        <ListView x:Name="GoodList" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="151,43,31,286" ItemsSource="{Binding GoodItems, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Template" Value="{x:Null}" />
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <TextBlock x:Name="GoodListLabel" HorizontalAlignment="Left" Margin="151,27,0,0" TextWrapping="Wrap" Text="Good" VerticalAlignment="Top" Grid.Column="1"/>
+        <ListView x:Name="BadList" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="25,43,157,286" ItemsSource="{Binding BadItems, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Template" Value="{x:Null}" />
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <TextBlock x:Name="BadListLabel" HorizontalAlignment="Left" Margin="25,27,0,0" TextWrapping="Wrap" Text="Bad" VerticalAlignment="Top" Grid.Column="1"/>
+        <TextBox x:Name="WindowLengthBox" HorizontalAlignment="Left" Margin="32,280,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding EvaluationWindowLength, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="WindowLegthLabel" HorizontalAlignment="Left" Margin="32,264,0,0" TextWrapping="Wrap" Text="Evaluation window (seconds)" VerticalAlignment="Top"/>
+        <TextBox x:Name="MaxSentimentBox" HorizontalAlignment="Left" Margin="32,333,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Text="{Binding MaxSentiment, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="MaxSentimentLabel" HorizontalAlignment="Left" Margin="32,317,0,0" TextWrapping="Wrap" Text="Sensitivity (how much does it take to max out the scale)" VerticalAlignment="Top"/>
+        <ListView x:Name="COMList" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="25,225,154,99" ItemsSource="{Binding COMPorts, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" SelectionChanged="COMList_SelectionChanged" SelectionMode="Single">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Template" Value="{x:Null}" />
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <TextBlock x:Name="COMPortsLabel" HorizontalAlignment="Left" Margin="25,209,0,0" TextWrapping="Wrap" Text="COM Ports" VerticalAlignment="Top" Grid.Column="1"/>
+        <TextBlock x:Name="PercentSentDebug" HorizontalAlignment="Left" Margin="236,249,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="{Binding PercentSentiment, UpdateSourceTrigger=PropertyChanged}"/>
+        <Button x:Name="COMTestButton" Grid.Column="1" Content="Test" HorizontalAlignment="Left" Margin="87,202,0,0" VerticalAlignment="Top" Click="COMTestButton_Click"/>
+
+    </Grid>
+</Window>

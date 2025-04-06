@@ -1,0 +1,29 @@
+﻿<html>
+<script>
+    const parsedHash = new URLSearchParams(
+        window.location.hash.substring(1)
+    );
+    if (parsedHash.get("access_token") == null) {
+        alert("Auth failed");
+    }
+    else {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'http://localhost:3000/authCode?access_token=' + parsedHash.get("access_token"));
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                console.log('Success:', JSON.parse(xhr.response));
+            } else {
+                console.error('Request failed with status:', xhr.status);
+            }
+        };
+
+        xhr.onerror = function () {
+            console.error('Request failed');
+        };
+
+        xhr.send();
+    }
+</script>
+<p>Token received. You can close this window</p>
+</html>
