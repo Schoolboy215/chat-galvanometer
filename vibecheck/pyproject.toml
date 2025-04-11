@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "vibecheck"
+version = "0.1.0"
+description = "CLI tool to train a model for twitch chat sentiment analysis"
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "vibecheck", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.2.3"
+scikit-learn = "^1.6.1"
+transformers = "^4.51.2"
+torch = "^2.6.0"
+accelerate = "^1.6.0"
+
+[tool.poetry.scripts]
+vibecheck = "vibecheck.train:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
