@@ -42,6 +42,8 @@ namespace ChatGalvanometer
         {
             base.OnClosing(e);
 
+            handler.dumpMessages();
+
             // Save window size before closing
             handler._settings.WindowWidth = (int)this.Width;
             handler._settings.WindowHeight = (int)this.Height;

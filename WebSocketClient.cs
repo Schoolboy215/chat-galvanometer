@@ -10,13 +10,25 @@ using System.Windows.Shapes;
 
 namespace ChatGalvanometer
 {
+    public class MessageNotification
+    {
+        public readonly String MessageText;
+        public readonly String MessageTime;
+
+        public MessageNotification(string _messageText, string _messageTime = "")
+        {
+            MessageText = _messageText;
+            MessageTime = _messageTime;
+        }
+    }
+
     public class WebSocketClient : IDisposable
     {
         private readonly ClientWebSocket _webSocket;
         private readonly Uri _serverUri;
         private CancellationTokenSource? _cts;
 
-        public event Action<string>? OnMessageReceived;
+        public event Action<MessageNotification>? OnMessageReceived;
         public event Action? OnWelcomed;
         public event Action? OnConnected;
         public event Action? OnDisconnected;
@@ -81,7 +93,8 @@ namespace ChatGalvanometer
                                 if (parsedMessage?.payload?.@event?.message?.text != null)
                                 {
                                     string asciiMessage = Regex.Replace((string)(parsedMessage?.payload?.@event?.message?.text), @"[^\u0020-\u007e]", "");
-                                    OnMessageReceived?.Invoke(asciiMessage.Trim());
+                                    var timestamp = parsedMessage?.metadata?.message_timestamp;
+                                    OnMessageReceived?.Invoke(new MessageNotification(asciiMessage.Trim(), timestamp.ToString()));
                                 }
                                 break;
                             case null:
@@ -89,7 +102,7 @@ namespace ChatGalvanometer
                                 break;
                             default:
                                 Trace.WriteLine($"Unknown message type ({messageType})");
-                                OnMessageReceived?.Invoke(message);
+                                OnMessageReceived?.Invoke(new MessageNotification(message));
                                 break;
                         }
                     }

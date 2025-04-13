@@ -29,7 +29,7 @@ namespace ChatGalvanometer
         private decimal lastPercentiment;
         private Queue<int> rollingSentiment;
         private int zeroCycles;
-        private List<string> messages;
+        private List<MessageNotification> messages;
 
         private readonly Timer callbackTimer;
 
@@ -154,21 +154,20 @@ namespace ChatGalvanometer
             await _webSocketClient.ConnectAsync();
         }
 
-        private void WebSocketMessageReceived(string _message)
+        private void WebSocketMessageReceived(MessageNotification _message)
         {
 
             // Uncomment to save chat messages in a file
             //messages.Add(_message);
             //if (messages.Count > 1000)
             //{
-            //    File.AppendAllLines("chatLog.txt", messages);
-            //    messages.Clear();
+            //    dumpMessages();
             //}
 
-            Trace.WriteLine($"Received: {_message}");
+            Trace.WriteLine($"Received: {_message.MessageText}");
 
             // Good message
-            if (_settings.GoodItems.Contains(_message))
+            if (_settings.GoodItems.Contains(_message.MessageText))
             {
                 lock (_lock)
                 {
@@ -177,13 +176,26 @@ namespace ChatGalvanometer
             }
 
             // Bad message
-            else if (_settings.BadItems.Contains(_message))
+            else if (_settings.BadItems.Contains(_message.MessageText))
             {
                 lock (_lock)
                 {
                     UpdateSentiment(false);
                 }
             }
+        }
+
+        public void dumpMessages()
+        {
+            var csv = new StringBuilder();
+
+            foreach (var m in messages)
+            {
+                var newLine = string.Format("\"{0}\",{1}", m.MessageText, m.MessageTime);
+                csv.AppendLine(newLine);
+            }
+            File.AppendAllText("chatLot.csv", csv.ToString());
+            messages.Clear();
         }
 
         private async void WebSocketWelcomed()
