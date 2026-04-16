@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using MessageBox = System.Windows.MessageBox;
 
 namespace ChatGalvanometer
 {
@@ -92,6 +93,10 @@ namespace ChatGalvanometer
 
         [JsonIgnore]
         public decimal? PercentSentiment { get => _percentSentiment; set { _percentSentiment = value; OnPropertyChanged(nameof(PercentSentiment)); } }
+
+        private string? _replayFileName;
+        [JsonIgnore]
+        public string? ReplayFilename { get => _replayFileName; set { _replayFileName = value; } }
 
         public static string SettingsFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
 

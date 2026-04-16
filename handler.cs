@@ -11,6 +11,9 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media.Animation;
 using Newtonsoft.Json.Linq;
+using Timer = System.Threading.Timer;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace ChatGalvanometer
 {
@@ -158,11 +161,11 @@ namespace ChatGalvanometer
         {
 
             // Uncomment to save chat messages in a file
-            //messages.Add(_message);
-            //if (messages.Count > 1000)
-            //{
-            //    dumpMessages();
-            //}
+            messages.Add(_message);
+            if (messages.Count > 1000)
+            {
+                dumpMessages();
+            }
 
             Trace.WriteLine($"Received: {_message.MessageText}");
 
@@ -194,7 +197,7 @@ namespace ChatGalvanometer
                 var newLine = string.Format("\"{0}\",{1}", m.MessageText, m.MessageTime);
                 csv.AppendLine(newLine);
             }
-            File.AppendAllText("chatLot.csv", csv.ToString());
+            File.AppendAllText("chatLog.csv", csv.ToString());
             messages.Clear();
         }
 

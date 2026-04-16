@@ -15,6 +15,7 @@ using System.Threading;
 using System.IO.Ports;
 using System.IO;
 using System.Runtime;
+using System.Formats.Tar;
 
 namespace ChatGalvanometer
 {
@@ -36,6 +37,8 @@ namespace ChatGalvanometer
             // Apply settings
             this.Width = handler._settings.WindowWidth;
             this.Height = handler._settings.WindowHeight;
+
+            this.COMList.SelectedValue = handler._settings.ComPort;
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -72,12 +75,33 @@ namespace ChatGalvanometer
 
         private void COMList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            handler._settings.ComPort = e.AddedItems?[0].ToString();
+            if (e.AddedItems.Count != 0)
+            {
+                handler._settings.ComPort = e.AddedItems?[0].ToString();
+            }
         }
 
         private void COMTestButton_Click(object sender, RoutedEventArgs e)
         {
             handler.TestCOMPort();
+        }
+
+        private void replayFilePickerButton_Click(object sender, RoutedEventArgs e)
+        {
+            var fileDialog = new System.Windows.Forms.OpenFileDialog();
+            var result = fileDialog.ShowDialog();
+            switch (result)
+            {
+                case System.Windows.Forms.DialogResult.OK:
+                    var file = fileDialog.FileName;
+                    replayFileNameBox.Text = fileDialog.SafeFileName;
+                    handler._settings.ReplayFilename = file;
+                    break;
+                case System.Windows.Forms.DialogResult.Cancel:
+                default:
+                    replayFileNameBox.Text = null;
+                    break;
+            }
         }
     }
 }

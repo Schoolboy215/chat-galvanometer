@@ -72,6 +72,9 @@
         <TextBlock x:Name="COMPortsLabel" HorizontalAlignment="Left" Margin="25,209,0,0" TextWrapping="Wrap" Text="COM Ports" VerticalAlignment="Top" Grid.Column="1"/>
         <TextBlock x:Name="PercentSentDebug" HorizontalAlignment="Left" Margin="236,249,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="{Binding PercentSentiment, UpdateSourceTrigger=PropertyChanged}"/>
         <Button x:Name="COMTestButton" Grid.Column="1" Content="Test" HorizontalAlignment="Left" Margin="87,202,0,0" VerticalAlignment="Top" Click="COMTestButton_Click"/>
+        <TextBox x:Name="startTimeBox" HorizontalAlignment="Left" Margin="32,420,0,0" TextWrapping="Wrap" d:Text="Start time" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="replayFileNameBox" HorizontalAlignment="Left" Margin="32,387,0,0" TextWrapping="Wrap" d:Text="Replay file" VerticalAlignment="Top" Width="120"/>
+        <Button x:Name="replayFilePickerButton" Content="Replay file" HorizontalAlignment="Left" Margin="170,386,0,0" VerticalAlignment="Top" Click="replayFilePickerButton_Click"/>
 
     </Grid>
 </Window>
