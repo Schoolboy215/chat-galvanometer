@@ -83,7 +83,17 @@ namespace ChatGalvanometer
         public bool BroadcasterIdLookupEnabled => CredentialsPopulated && BroadcasterNamePopulated && !BroadcasterIdPopulated;
 
         [JsonIgnore]
-        public bool ConnectEnabled => CredentialsPopulated && UserIdPopulated && BroadcasterIdPopulated;
+        public bool ConnectEnabled => CredentialsPopulated && UserIdPopulated && BroadcasterIdPopulated && !IsConnected;
+
+        [JsonIgnore]
+        public bool ConnectButtonEnabled => ConnectEnabled || IsConnected;
+
+        private bool _isConnected;
+        [JsonIgnore]
+        public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(nameof(IsConnected)); OnPropertyChanged(nameof(ConnectEnabled)); OnPropertyChanged(nameof(ConnectButtonEnabled)); OnPropertyChanged(nameof(ConnectionStatusText)); } }
+
+        [JsonIgnore]
+        public string ConnectionStatusText => _isConnected ? "Connected" : "Disconnected";
 
         private int? _rawSentiment;
         [JsonIgnore]
@@ -96,7 +106,7 @@ namespace ChatGalvanometer
 
         private string? _replayFileName;
         [JsonIgnore]
-        public string? ReplayFilename { get => _replayFileName; set { _replayFileName = value; } }
+        public string? ReplayFilename { get => _replayFileName; set { _replayFileName = value; OnPropertyChanged(nameof(ReplayFilename)); } }
 
         public static string SettingsFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
 
@@ -107,6 +117,7 @@ namespace ChatGalvanometer
             GoodItems = ["+2"];
             BadItems = ["-2"];
             EvaluationWindowLength = 10;
+            PercentSentiment = 0;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -131,15 +142,5 @@ namespace ChatGalvanometer
             File.WriteAllText(SettingsFilePath, json);
         }
 
-        private void AlertRestartRequired()
-        {
-            string messageBoxText = "You need to close and open the program again to take new changes";
-            string caption = "Restart required";
-            MessageBoxButton button = MessageBoxButton.OK;
-            MessageBoxImage icon = MessageBoxImage.Warning;
-            MessageBoxResult result;
-
-            MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.OK);
-        }
     }
 }

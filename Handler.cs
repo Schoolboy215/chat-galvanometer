@@ -1,15 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Threading;
 using System.Threading;
-using System.IO.Ports;
 using System.IO;
 using System.Windows;
-using System.Windows.Media.Animation;
 using Newtonsoft.Json.Linq;
 using Timer = System.Threading.Timer;
 using Application = System.Windows.Application;
@@ -20,12 +16,14 @@ namespace ChatGalvanometer
     public class Handler
     {
         private readonly WebSocketClient _webSocketClient;
-        private readonly HttpClient _httpClient;
-        public readonly Settings _settings;
+        private readonly TwitchApiClient _httpClient;
+        private readonly Settings _settings;
         private readonly LocalHttpListener _httpListener;
-        private          SerialCommunicator? _serial;
+
+        public Settings Settings => _settings;
 
         private static readonly object _lock = new();
+        private bool _intentionalDisconnect;
 
         private int rawSentiment;
         private int lastSentimentCheckPoint;
@@ -44,9 +42,9 @@ namespace ChatGalvanometer
             _webSocketClient.OnDisconnected += () => Application.Current.Dispatcher.Invoke(() => WebSocketDisconnected());
             _webSocketClient.OnWelcomed += () => Application.Current.Dispatcher.Invoke(() => WebSocketWelcomed());
 
-            _httpClient = new HttpClient();
+            _httpClient = new TwitchApiClient();
             _httpListener = new LocalHttpListener();
-            _httpListener.OnAuthCodeReceived += _authCode => Application.Current.Dispatcher.Invoke(() => authCodeReceived(_authCode));
+            _httpListener.OnAuthCodeReceived += _authCode => Application.Current.Dispatcher.Invoke(() => AuthCodeReceived(_authCode));
 
             _settings = Settings.Load();
 
@@ -68,6 +66,8 @@ namespace ChatGalvanometer
 
         public async Task DisconnectFromWebSocket()
         {
+            _intentionalDisconnect = true;
+            _settings.IsConnected = false;
             await _webSocketClient.DisconnectAsync();
         }
 
@@ -90,18 +90,12 @@ namespace ChatGalvanometer
                     caller._settings.RawSentiment = caller.rawSentiment;
                     caller.rollingSentiment.Enqueue(sentimentChange);
 
-
                     while (caller.rollingSentiment.Count > (caller._settings.EvaluationWindowLength * 2))
                     {
                         caller.rollingSentiment.Dequeue();
                     }
 
-
-                    int windowSentiment = 0;
-                    for (var i = 0; i < caller.rollingSentiment.Count; i++)
-                    {
-                        windowSentiment += caller.rollingSentiment.ElementAt(i);
-                    }
+                    int windowSentiment = caller.rollingSentiment.Sum();
 
                     if (Math.Abs(windowSentiment) > caller._settings.MaxSentiment)
                     {
@@ -114,10 +108,10 @@ namespace ChatGalvanometer
                     if (percentSentiment != caller.lastPercentiment)
                     {
                         Trace.WriteLine($"New percent sentiment is {percentSentiment}");
-                        caller._serial = new SerialCommunicator(caller._settings.ComPort);
+                        var serial = new SerialCommunicator(caller._settings.ComPort);
                         Thread.Sleep(10);
-                        caller._serial.SendDecimal(percentSentiment);
-                        caller._serial.Close();
+                        serial.SendDecimal(percentSentiment);
+                        serial.Close();
                         caller._settings.PercentSentiment = percentSentiment;
                     }
                     else if (percentSentiment == 0)
@@ -126,10 +120,10 @@ namespace ChatGalvanometer
                         if (caller.zeroCycles > 10)
                         {
                             caller.zeroCycles = 0;
-                            caller._serial = new SerialCommunicator(caller._settings.ComPort);
+                            var serial = new SerialCommunicator(caller._settings.ComPort);
                             Thread.Sleep(10);
-                            caller._serial.SendDecimal(percentSentiment);
-                            caller._serial.Close();
+                            serial.SendDecimal(percentSentiment);
+                            serial.Close();
                         }
                     }
                     caller.lastPercentiment = percentSentiment;
@@ -137,13 +131,13 @@ namespace ChatGalvanometer
             }
             catch (Exception ex)
             {
-                int i = 0;
+                Trace.WriteLine($"Timer callback error: {ex}");
             }
         }
 
         private void UpdateSentiment(bool _positive)
         {
-            rawSentiment += _positive == true ? 1 : -1;
+            rawSentiment += _positive ? 1 : -1;
         }
 
         private static void WebSocketConnected()
@@ -154,22 +148,25 @@ namespace ChatGalvanometer
         private async void WebSocketDisconnected()
         {
             Trace.WriteLine("WebSocket Disconnected");
+            _settings.IsConnected = false;
+            if (_intentionalDisconnect)
+            {
+                _intentionalDisconnect = false;
+                return;
+            }
             await _webSocketClient.ConnectAsync();
         }
 
         private void WebSocketMessageReceived(MessageNotification _message)
         {
-
-            // Uncomment to save chat messages in a file
             messages.Add(_message);
             if (messages.Count > 1000)
             {
-                dumpMessages();
+                DumpMessages();
             }
 
             Trace.WriteLine($"Received: {_message.MessageText}");
 
-            // Good message
             if (_settings.GoodItems.Contains(_message.MessageText))
             {
                 lock (_lock)
@@ -177,8 +174,6 @@ namespace ChatGalvanometer
                     UpdateSentiment(true);
                 }
             }
-
-            // Bad message
             else if (_settings.BadItems.Contains(_message.MessageText))
             {
                 lock (_lock)
@@ -188,7 +183,7 @@ namespace ChatGalvanometer
             }
         }
 
-        public void dumpMessages()
+        public void DumpMessages()
         {
             var csv = new StringBuilder();
 
@@ -204,6 +199,7 @@ namespace ChatGalvanometer
         private async void WebSocketWelcomed()
         {
             Trace.WriteLine("Welcomed to server, subscribing to chat event");
+            _settings.IsConnected = true;
             var payload = new
             {
                 type = "channel.chat.message",
@@ -216,10 +212,18 @@ namespace ChatGalvanometer
                 transport = new
                 {
                     method = "websocket",
-                    session_id = _webSocketClient._sessionId
+                    session_id = _webSocketClient.SessionId
                 }
             };
-            await _httpClient.PostJsonAsync("https://api.twitch.tv/helix/eventsub/subscriptions", payload, _settings.BearerToken, _settings.ClientId);
+            try
+            {
+                await _httpClient.PostJsonAsync("https://api.twitch.tv/helix/eventsub/subscriptions", payload, _settings.BearerToken, _settings.ClientId);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"Failed to subscribe to chat events: {ex.Message}");
+                MessageBox.Show($"Failed to subscribe to chat events: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public async Task GetToken()
@@ -228,14 +232,12 @@ namespace ChatGalvanometer
 
             try
             {
-                // Open the authentication URL in the default browser
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = authUrl,
                     UseShellExecute = true
                 });
 
-                // Start listening for the authentication callback
                 await _httpListener.StartListeningAsync();
             }
             catch (Exception ex)
@@ -244,7 +246,7 @@ namespace ChatGalvanometer
             }
         }
 
-        public async Task<String> GetUserId(String _name)
+        public async Task<string> GetUserId(string _name)
         {
             try
             {
@@ -258,7 +260,7 @@ namespace ChatGalvanometer
             }
         }
 
-        private void authCodeReceived(string _authCode)
+        private void AuthCodeReceived(string _authCode)
         {
             Trace.WriteLine("New auth code success");
             _settings.BearerToken = _authCode;
@@ -269,17 +271,17 @@ namespace ChatGalvanometer
         {
             lock (_lock)
             {
-                _serial = new SerialCommunicator(_settings.ComPort);
+                var serial = new SerialCommunicator(_settings.ComPort);
                 Thread.Sleep(10);
-                _serial.SendDecimal(-1);
+                serial.SendDecimal(-1);
                 Thread.Sleep(500);
-                _serial.SendDecimal(0);
+                serial.SendDecimal(0);
                 Thread.Sleep(500);
-                _serial.SendDecimal(1);
+                serial.SendDecimal(1);
                 Thread.Sleep(500);
-                _serial.SendDecimal(0);
+                serial.SendDecimal(0);
                 Thread.Sleep(500);
-                _serial.Close();
+                serial.Close();
             }
         }
     }

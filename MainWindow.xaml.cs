@@ -1,25 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Diagnostics;
-using System.Net;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Threading;
-using System.IO.Ports;
-using System.IO;
-using System.Runtime;
-using System.Formats.Tar;
 
 namespace ChatGalvanometer
 {
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -32,30 +15,31 @@ namespace ChatGalvanometer
             InitializeComponent();
 
             handler = new Handler();
-            DataContext = handler._settings;
+            DataContext = handler.Settings;
 
-            // Apply settings
-            this.Width = handler._settings.WindowWidth;
-            this.Height = handler._settings.WindowHeight;
+            this.Width = handler.Settings.WindowWidth;
+            this.Height = handler.Settings.WindowHeight;
 
-            this.COMList.SelectedValue = handler._settings.ComPort;
+            this.COMList.SelectedValue = handler.Settings.ComPort;
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             base.OnClosing(e);
 
-            handler.dumpMessages();
+            handler.DumpMessages();
 
-            // Save window size before closing
-            handler._settings.WindowWidth = (int)this.Width;
-            handler._settings.WindowHeight = (int)this.Height;
-            handler._settings.Save();
+            handler.Settings.WindowWidth = (int)this.Width;
+            handler.Settings.WindowHeight = (int)this.Height;
+            handler.Settings.Save();
         }
 
         private async void connectButton_Click(object sender, RoutedEventArgs e)
         {
-            await handler.ConnectToWebSocket();
+            if (handler.Settings.IsConnected)
+                await handler.DisconnectFromWebSocket();
+            else
+                await handler.ConnectToWebSocket();
         }
 
         private async void getTokenButton_Click(object sender, RoutedEventArgs e)
@@ -65,19 +49,19 @@ namespace ChatGalvanometer
 
         private async void UserIdLookupButton_Click(object sender, RoutedEventArgs e)
         {
-            handler._settings.UserId = await handler.GetUserId(handler._settings.UserName);
+            handler.Settings.UserId = await handler.GetUserId(handler.Settings.UserName);
         }
 
         private async void BroadcasterIdLookup_Click(object sender, RoutedEventArgs e)
         {
-            handler._settings.BroadcasterId = await handler.GetUserId(handler._settings.BroadcasterName);
+            handler.Settings.BroadcasterId = await handler.GetUserId(handler.Settings.BroadcasterName);
         }
 
         private void COMList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count != 0)
             {
-                handler._settings.ComPort = e.AddedItems?[0].ToString();
+                handler.Settings.ComPort = e.AddedItems?[0].ToString();
             }
         }
 
@@ -95,7 +79,7 @@ namespace ChatGalvanometer
                 case System.Windows.Forms.DialogResult.OK:
                     var file = fileDialog.FileName;
                     replayFileNameBox.Text = fileDialog.SafeFileName;
-                    handler._settings.ReplayFilename = file;
+                    handler.Settings.ReplayFilename = file;
                     break;
                 case System.Windows.Forms.DialogResult.Cancel:
                 default:

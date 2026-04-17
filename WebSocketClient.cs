@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
 using System.Net.WebSockets;
@@ -6,14 +6,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Shapes;
 
 namespace ChatGalvanometer
 {
     public class MessageNotification
     {
-        public readonly String MessageText;
-        public readonly String MessageTime;
+        public readonly string MessageText;
+        public readonly string MessageTime;
 
         public MessageNotification(string _messageText, string _messageTime = "")
         {
@@ -24,7 +23,7 @@ namespace ChatGalvanometer
 
     public class WebSocketClient : IDisposable
     {
-        private readonly ClientWebSocket _webSocket;
+        private ClientWebSocket _webSocket;
         private readonly Uri _serverUri;
         private CancellationTokenSource? _cts;
 
@@ -33,23 +32,27 @@ namespace ChatGalvanometer
         public event Action? OnConnected;
         public event Action? OnDisconnected;
 
-        public string? _sessionId;
+        public string? SessionId { get; private set; }
 
         public WebSocketClient(string serverUrl)
         {
             _webSocket = new ClientWebSocket();
             _serverUri = new Uri(serverUrl);
-            _sessionId = null;
         }
 
         public async Task ConnectAsync()
         {
+            if (_webSocket.State != WebSocketState.None)
+            {
+                _webSocket.Dispose();
+                _webSocket = new ClientWebSocket();
+            }
             _cts = new CancellationTokenSource();
             try
             {
                 await _webSocket.ConnectAsync(_serverUri, _cts.Token);
                 OnConnected?.Invoke();
-                _ = ReceiveMessagesAsync(); // Start listening for messages in the background
+                _ = ReceiveMessagesAsync();
             }
             catch (Exception ex)
             {
@@ -60,12 +63,11 @@ namespace ChatGalvanometer
         private async Task ReceiveMessagesAsync()
         {
             var buffer = new byte[8192];
-            dynamic parsedMessage;
             try
             {
                 while (_webSocket.State == WebSocketState.Open)
                 {
-                    WebSocketReceiveResult result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
+                    WebSocketReceiveResult result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cts!.Token);
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
@@ -74,6 +76,7 @@ namespace ChatGalvanometer
                     else
                     {
                         string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        JObject? parsedMessage;
                         try
                         {
                             parsedMessage = JObject.Parse(message);
@@ -82,19 +85,21 @@ namespace ChatGalvanometer
                         {
                             continue;
                         }
-                        string? messageType = parsedMessage?.metadata?.message_type;
+
+                        string? messageType = parsedMessage?["metadata"]?["message_type"]?.ToString();
                         switch (messageType)
                         {
                             case "session_welcome":
-                                _sessionId = parsedMessage?.payload?.session?.id;
+                                SessionId = parsedMessage?["payload"]?["session"]?["id"]?.ToString();
                                 OnWelcomed?.Invoke();
                                 break;
                             case "notification":
-                                if (parsedMessage?.payload?.@event?.message?.text != null)
+                                string? text = parsedMessage?["payload"]?["event"]?["message"]?["text"]?.ToString();
+                                if (text != null)
                                 {
-                                    string asciiMessage = Regex.Replace((string)(parsedMessage?.payload?.@event?.message?.text), @"[^\u0020-\u007e]", "");
-                                    var timestamp = parsedMessage?.metadata?.message_timestamp;
-                                    OnMessageReceived?.Invoke(new MessageNotification(asciiMessage.Trim(), timestamp.ToString()));
+                                    string asciiMessage = Regex.Replace(text, @"[^\u0020-\u007e]", "");
+                                    string? timestamp = parsedMessage?["metadata"]?["message_timestamp"]?.ToString();
+                                    OnMessageReceived?.Invoke(new MessageNotification(asciiMessage.Trim(), timestamp ?? ""));
                                 }
                                 break;
                             case null:
@@ -120,7 +125,7 @@ namespace ChatGalvanometer
             if (_webSocket.State == WebSocketState.Open)
             {
                 byte[] buffer = Encoding.UTF8.GetBytes(message);
-                await _webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, _cts.Token);
+                await _webSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, _cts!.Token);
             }
         }
 
@@ -128,9 +133,16 @@ namespace ChatGalvanometer
         {
             if (_webSocket.State == WebSocketState.Open)
             {
-                _cts.Cancel();
-                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
-                OnDisconnected?.Invoke();
+                _cts?.Cancel();
+                try
+                {
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"WebSocket close error: {ex.Message}");
+                }
+                // OnDisconnected is fired by ReceiveMessagesAsync when the cancellation unwinds it
             }
         }
 
