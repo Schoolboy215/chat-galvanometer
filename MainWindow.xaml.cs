@@ -70,6 +70,34 @@ namespace ChatGalvanometer
             handler.TestCOMPort();
         }
 
+        private void AddBadItem_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new InputDialog("Bad word or phrase:") { Owner = this };
+            if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.Value)
+                && !handler.Settings.BadItems.Contains(dialog.Value))
+                handler.Settings.BadItems.Add(dialog.Value);
+        }
+
+        private void RemoveBadItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (BadList.SelectedItem is string item)
+                handler.Settings.BadItems.Remove(item);
+        }
+
+        private void AddGoodItem_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new InputDialog("Good word or phrase:") { Owner = this };
+            if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.Value)
+                && !handler.Settings.GoodItems.Contains(dialog.Value))
+                handler.Settings.GoodItems.Add(dialog.Value);
+        }
+
+        private void RemoveGoodItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (GoodList.SelectedItem is string item)
+                handler.Settings.GoodItems.Remove(item);
+        }
+
         private void replayFilePickerButton_Click(object sender, RoutedEventArgs e)
         {
             var fileDialog = new System.Windows.Forms.OpenFileDialog();
