@@ -22,7 +22,10 @@ jobs:
       - name: Publish
         run: dotnet publish ChatGalvanometer.csproj -c Release -o publish
 
+      - name: Zip release
+        run: Compress-Archive -Path publish\ChatGalvanometer.exe, publish\authPage.html -DestinationPath ChatGalvanometer.zip
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: publish/ChatGalvanometer.exe
+          files: ChatGalvanometer.zip
