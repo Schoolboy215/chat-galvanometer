@@ -7,21 +7,6 @@ namespace ChatGalvanometer;
 
 public partial class App : Application
 {
-    [STAThread]
-    public static void Main()
-    {
-        try
-        {
-            var app = new App();
-            app.InitializeComponent();
-            app.Run();
-        }
-        catch (Exception ex)
-        {
-            WriteCrashLog(ex);
-        }
-    }
-
     protected override void OnStartup(StartupEventArgs e)
     {
         DispatcherUnhandledException += (s, args) =>
@@ -37,15 +22,6 @@ public partial class App : Application
         base.OnStartup(e);
     }
 
-    private static void WriteCrashLog(Exception ex)
-    {
-        try
-        {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ChatGalvanometer");
-            Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "crash.log"), $"{DateTime.Now}\n{ex}");
-        }
-        catch { }
-    }
+    private static void WriteCrashLog(Exception ex) => Program.WriteCrashLog(ex);
 }
 

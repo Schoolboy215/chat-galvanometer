@@ -10,7 +10,7 @@
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <StartupObject>ChatGalvanometer.App</StartupObject>
+    <StartupObject>ChatGalvanometer.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
