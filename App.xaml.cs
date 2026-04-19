@@ -7,6 +7,21 @@ namespace ChatGalvanometer;
 
 public partial class App : Application
 {
+    [STAThread]
+    public static void Main()
+    {
+        try
+        {
+            var app = new App();
+            app.InitializeComponent();
+            app.Run();
+        }
+        catch (Exception ex)
+        {
+            WriteCrashLog(ex);
+        }
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         DispatcherUnhandledException += (s, args) =>
