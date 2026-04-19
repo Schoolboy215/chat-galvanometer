@@ -167,14 +167,21 @@ namespace ChatGalvanometer
 
             Trace.WriteLine($"Received: {_message.MessageText}");
 
-            if (_settings.GoodItems.Contains(_message.MessageText))
+            bool isGood = _settings.MatchAnywhere
+                ? _settings.GoodItems.Any(k => _message.MessageText.Contains(k, StringComparison.OrdinalIgnoreCase))
+                : _settings.GoodItems.Contains(_message.MessageText);
+            bool isBad = _settings.MatchAnywhere
+                ? _settings.BadItems.Any(k => _message.MessageText.Contains(k, StringComparison.OrdinalIgnoreCase))
+                : _settings.BadItems.Contains(_message.MessageText);
+
+            if (isGood)
             {
                 lock (_lock)
                 {
                     UpdateSentiment(true);
                 }
             }
-            else if (_settings.BadItems.Contains(_message.MessageText))
+            else if (isBad)
             {
                 lock (_lock)
                 {

@@ -12,7 +12,7 @@ namespace ChatGalvanometer
     public class Settings : INotifyPropertyChanged
     {
         private string _clientId;
-        public string? ClientId { get => _clientId; set { _clientId = value; OnPropertyChanged(nameof(ClientId)); BearerToken = ""; OnPropertyChanged(nameof(BearerToken)); OnPropertyChanged(nameof(CredentialsPopulated)); OnPropertyChanged(nameof(UserIdLookupEnabled)); OnPropertyChanged(nameof(ConnectEnabled)); } }
+        public string? ClientId { get => _clientId; set { _clientId = value; OnPropertyChanged(nameof(ClientId)); BearerToken = ""; OnPropertyChanged(nameof(BearerToken)); OnPropertyChanged(nameof(CredentialsPopulated)); OnPropertyChanged(nameof(GetTokenEnabled)); OnPropertyChanged(nameof(UserIdLookupEnabled)); OnPropertyChanged(nameof(ConnectEnabled)); } }
 
         private string _bearerToken;
         public string? BearerToken { get => _bearerToken; set { _bearerToken = value; OnPropertyChanged(nameof(BearerToken)); OnPropertyChanged(nameof(CredentialsPopulated)); OnPropertyChanged(nameof(UserIdLookupEnabled)); OnPropertyChanged(nameof(ConnectEnabled)); } }
@@ -36,8 +36,13 @@ namespace ChatGalvanometer
         private int? _maxSentiment;
         public int? MaxSentiment { get => _maxSentiment; set { _maxSentiment = value; OnPropertyChanged(nameof(MaxSentiment)); } }
 
+        public bool MatchAnywhere { get; set; }
+
         private string? _comPort;
-        public string? ComPort { get => _comPort; set { _comPort = value; OnPropertyChanged(nameof(ComPort)); } }
+        public string? ComPort { get => _comPort; set { _comPort = value; OnPropertyChanged(nameof(ComPort)); OnPropertyChanged(nameof(ComPortSelected)); OnPropertyChanged(nameof(ConnectEnabled)); } }
+
+        [JsonIgnore]
+        public bool ComPortSelected => !string.IsNullOrWhiteSpace(ComPort);
 
         public double WindowWidth { get; set; }
         public double WindowHeight { get; set; }
@@ -65,6 +70,9 @@ namespace ChatGalvanometer
         public bool CredentialsPopulated => !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(BearerToken);
 
         [JsonIgnore]
+        public bool GetTokenEnabled => !string.IsNullOrWhiteSpace(ClientId);
+
+        [JsonIgnore]
         public bool UserNamePopulated => !string.IsNullOrWhiteSpace(UserName);
 
         [JsonIgnore]
@@ -83,14 +91,11 @@ namespace ChatGalvanometer
         public bool BroadcasterIdLookupEnabled => CredentialsPopulated && BroadcasterNamePopulated && !BroadcasterIdPopulated;
 
         [JsonIgnore]
-        public bool ConnectEnabled => CredentialsPopulated && UserIdPopulated && BroadcasterIdPopulated && !IsConnected;
-
-        [JsonIgnore]
-        public bool ConnectButtonEnabled => ConnectEnabled || IsConnected;
+        public bool ConnectEnabled => CredentialsPopulated && UserIdPopulated && BroadcasterIdPopulated && ComPortSelected;
 
         private bool _isConnected;
         [JsonIgnore]
-        public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(nameof(IsConnected)); OnPropertyChanged(nameof(ConnectEnabled)); OnPropertyChanged(nameof(ConnectButtonEnabled)); OnPropertyChanged(nameof(ConnectionStatusText)); } }
+        public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(nameof(IsConnected)); OnPropertyChanged(nameof(ConnectEnabled)); OnPropertyChanged(nameof(ConnectionStatusText)); } }
 
         [JsonIgnore]
         public string ConnectionStatusText => _isConnected ? "Connected" : "Disconnected";
@@ -117,6 +122,7 @@ namespace ChatGalvanometer
             GoodItems = ["+2"];
             BadItems = ["-2"];
             EvaluationWindowLength = 10;
+            MaxSentiment = 10;
             PercentSentiment = 0;
         }
 

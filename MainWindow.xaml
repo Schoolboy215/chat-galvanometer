@@ -40,6 +40,7 @@
 
                     <Button x:Name="getTokenButton" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                             Content="Get Token" HorizontalAlignment="Left" Width="80"
+                            IsEnabled="{Binding GetTokenEnabled, UpdateSourceTrigger=PropertyChanged}"
                             Click="getTokenButton_Click"/>
                 </Grid>
             </GroupBox>
@@ -103,7 +104,7 @@
                 </Ellipse>
                 <TextBlock Text="{Binding ConnectionStatusText}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <Button x:Name="connectButton" Width="80"
-                        IsEnabled="{Binding ConnectButtonEnabled}" Click="connectButton_Click">
+                        IsEnabled="{Binding ConnectEnabled}" Click="connectButton_Click">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Content" Value="Connect"/>
@@ -137,7 +138,7 @@
                              Text="{Binding EvaluationWindowLength, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
-                               Text="Sensitivity (how much does it take to max out the scale)" Margin="0,0,0,2"
+                               Text="Range (how much does it take to max out the scale)" Margin="0,0,0,2"
                                TextWrapping="Wrap"/>
                     <TextBox x:Name="MaxSentimentBox" Grid.Row="3" Grid.Column="0" Margin="0,0,4,6"
                              Text="{Binding MaxSentiment, UpdateSourceTrigger=PropertyChanged}"/>
@@ -177,6 +178,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="140"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock x:Name="BadListLabel" Grid.Row="0" Grid.Column="0" Text="Bad" Margin="0,0,0,2"/>
@@ -190,13 +192,37 @@
                          d:ItemsSource="{d:SampleData ItemCount=5}"
                          ItemsSource="{Binding GoodItems, UpdateSourceTrigger=PropertyChanged}"/>
 
+                <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,6,0,0"
+                          Content="Match anywhere in message"
+                          IsChecked="{Binding MatchAnywhere}"/>
+
                 <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,4,2,0">
                     <Button Content="Add" Width="44" Margin="0,0,2,0" Click="AddBadItem_Click"/>
-                    <Button Content="Remove" Click="RemoveBadItem_Click"/>
+                    <Button Content="Remove" Click="RemoveBadItem_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem, ElementName=BadList}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="2,4,0,0">
                     <Button Content="Add" Width="44" Margin="0,0,2,0" Click="AddGoodItem_Click"/>
-                    <Button Content="Remove" Click="RemoveGoodItem_Click"/>
+                    <Button Content="Remove" Click="RemoveGoodItem_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItem, ElementName=GoodList}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </Grid>
 
@@ -219,6 +245,7 @@
                         </ListView.View>
                     </ListView>
                     <Button x:Name="COMTestButton" Content="Test" HorizontalAlignment="Left" Width="60"
+                            IsEnabled="{Binding ComPortSelected}"
                             Click="COMTestButton_Click"/>
                 </StackPanel>
             </GroupBox>
