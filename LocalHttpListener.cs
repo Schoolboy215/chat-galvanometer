@@ -21,7 +21,7 @@ namespace ChatGalvanometer
         {
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://localhost:{_port}/");
-            _htmlFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "authPage.html");
+            _htmlFilePath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath)!, "authPage.html");
         }
 
         public async Task StartListeningAsync()
