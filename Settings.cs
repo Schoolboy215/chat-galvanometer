@@ -39,7 +39,7 @@ namespace ChatGalvanometer
         public bool MatchAnywhere { get; set; }
 
         private string? _comPort;
-        public string? ComPort { get => _comPort; set { _comPort = value; OnPropertyChanged(nameof(ComPort)); OnPropertyChanged(nameof(ComPortSelected)); OnPropertyChanged(nameof(ConnectEnabled)); } }
+        public string? ComPort { get => _comPort; set { _comPort = value; OnPropertyChanged(nameof(ComPort)); OnPropertyChanged(nameof(ComPortSelected)); OnPropertyChanged(nameof(ConnectEnabled)); OnPropertyChanged(nameof(ReplayButtonEnabled)); } }
 
         [JsonIgnore]
         public bool ComPortSelected => !string.IsNullOrWhiteSpace(ComPort);
@@ -91,11 +91,11 @@ namespace ChatGalvanometer
         public bool BroadcasterIdLookupEnabled => CredentialsPopulated && BroadcasterNamePopulated && !BroadcasterIdPopulated;
 
         [JsonIgnore]
-        public bool ConnectEnabled => CredentialsPopulated && UserIdPopulated && BroadcasterIdPopulated && ComPortSelected;
+        public bool ConnectEnabled => CredentialsPopulated && UserIdPopulated && BroadcasterIdPopulated && ComPortSelected && !IsReplaying;
 
         private bool _isConnected;
         [JsonIgnore]
-        public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(nameof(IsConnected)); OnPropertyChanged(nameof(ConnectEnabled)); OnPropertyChanged(nameof(ConnectionStatusText)); } }
+        public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(nameof(IsConnected)); OnPropertyChanged(nameof(ConnectEnabled)); OnPropertyChanged(nameof(ConnectionStatusText)); OnPropertyChanged(nameof(ReplayButtonEnabled)); } }
 
         [JsonIgnore]
         public string ConnectionStatusText => _isConnected ? "Connected" : "Disconnected";
@@ -109,16 +109,42 @@ namespace ChatGalvanometer
         [JsonIgnore]
         public decimal? PercentSentiment { get => _percentSentiment; set { _percentSentiment = value; OnPropertyChanged(nameof(PercentSentiment)); } }
 
+        private string? _lastMessage;
+        [JsonIgnore]
+        public string? LastMessage { get => _lastMessage; set { _lastMessage = value; OnPropertyChanged(nameof(LastMessage)); } }
+
         private string? _replayFileName;
         [JsonIgnore]
-        public string? ReplayFilename { get => _replayFileName; set { _replayFileName = value; OnPropertyChanged(nameof(ReplayFilename)); } }
+        public string? ReplayFilename { get => _replayFileName; set { _replayFileName = value; OnPropertyChanged(nameof(ReplayFilename)); OnPropertyChanged(nameof(ReplayButtonEnabled)); } }
+
+        private bool _isReplaying;
+        [JsonIgnore]
+        public bool IsReplaying
+        {
+            get => _isReplaying;
+            set
+            {
+                _isReplaying = value;
+                OnPropertyChanged(nameof(IsReplaying));
+                OnPropertyChanged(nameof(ReplayButtonEnabled));
+                OnPropertyChanged(nameof(ConnectEnabled));
+                if (!value) ReplayCurrentTime = "";
+            }
+        }
+
+        private string _replayCurrentTime = "";
+        [JsonIgnore]
+        public string ReplayCurrentTime { get => _replayCurrentTime; set { _replayCurrentTime = value; OnPropertyChanged(nameof(ReplayCurrentTime)); } }
+
+        [JsonIgnore]
+        public bool ReplayButtonEnabled => IsReplaying || (ComPortSelected && !string.IsNullOrEmpty(ReplayFilename) && !IsConnected);
 
         public static string SettingsFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
 
         public Settings()
         {
-            WindowWidth = 640;
-            WindowHeight = 480;
+            WindowWidth = 650;
+            WindowHeight = 550;
             GoodItems = ["+2"];
             BadItems = ["-2"];
             EvaluationWindowLength = 10;

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatGalvanometer"
         mc:Ignorable="d"
-        Title="Chat Galvanometer" Height="520" Width="680" MinHeight="480" MinWidth="600">
+        Title="Chat Galvanometer" Height="551" Width="680" MinHeight="480" MinWidth="600">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -144,7 +144,11 @@
                              Text="{Binding MaxSentiment, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock x:Name="PercentSentDebug" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
-                               Text="{Binding PercentSentiment, UpdateSourceTrigger=PropertyChanged}"/>
+                               TextWrapping="Wrap">
+                        <Run Text="{Binding PercentSentiment, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Run Text=" | "/>
+                        <Run Text="{Binding LastMessage, UpdateSourceTrigger=PropertyChanged}"/>
+                    </TextBlock>
                 </Grid>
             </GroupBox>
 
@@ -157,10 +161,26 @@
                                  IsEnabled="False"
                                  Background="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Start time" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBox x:Name="startTimeBox" Width="120"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="Start time (YYYY-MM-DD HH:MM:SS)" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBox x:Name="startTimeBox" Width="140"/>
                     </StackPanel>
+                    <TextBlock Text="{Binding ReplayCurrentTime}" Margin="0,0,0,4"
+                               FontFamily="Consolas" FontSize="11"/>
+                    <Button x:Name="replayStartStopButton" HorizontalAlignment="Left" Width="100"
+                            IsEnabled="{Binding ReplayButtonEnabled}"
+                            Click="replayStartStopButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Content" Value="Start Replay"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsReplaying}" Value="True">
+                                        <Setter Property="Content" Value="Stop Replay"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </GroupBox>
 

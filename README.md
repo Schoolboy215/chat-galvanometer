@@ -65,6 +65,14 @@ Each chat message is scanned for entries in your Good and Bad lists. Matches inc
 
 Start with a small `MaxSentiment` (e.g. 5–10) for a reactive needle, or raise it for a more stable reading in busy chats.
 
+## Replaying old sessions
+
+All incoming chat during a session is recorded into a `chatLog.csv` file, with the message and timestamp. **No usernames!**
+
+If you want to replay such a file, you can select it using the "Choose file" button in the replay section at the bottom of the application. You can specify a starting time (in UTC like the file holds) or leave empty to begin at the start of the file.
+
+Pressing "Start replay" will let the application start parsing messages from the file at the same rate they were recorded, just as if you were connected to a live stream.
+
 ## Hardware
 
 The app sends sentiment values over serial as `{value}d` (e.g. `0.75d`), at 115200 baud, every 500 ms.

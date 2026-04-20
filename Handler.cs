@@ -32,6 +32,8 @@ namespace ChatGalvanometer
         private int zeroCycles;
         private List<MessageNotification> messages;
 
+        private CancellationTokenSource? _replayCts;
+
         private readonly Timer callbackTimer;
 
         public Handler()
@@ -161,11 +163,15 @@ namespace ChatGalvanometer
         {
             messages.Add(_message);
             if (messages.Count > 1000)
-            {
                 DumpMessages();
-            }
 
+            ProcessMessageSentiment(_message);
+        }
+
+        private void ProcessMessageSentiment(MessageNotification _message)
+        {
             Trace.WriteLine($"Received: {_message.MessageText}");
+            Application.Current.Dispatcher.BeginInvoke(() => _settings.LastMessage = _message.MessageText);
 
             bool isGood = _settings.MatchAnywhere
                 ? _settings.GoodItems.Any(k => _message.MessageText.Contains(k, StringComparison.OrdinalIgnoreCase))
@@ -190,13 +196,69 @@ namespace ChatGalvanometer
             }
         }
 
+        public void StartReplay(string filePath, string? startTimeStr)
+        {
+            _replayCts?.Cancel();
+            _replayCts = new CancellationTokenSource();
+            var ct = _replayCts.Token;
+
+            lock (_lock)
+            {
+                rawSentiment = 0;
+                lastSentimentCheckPoint = 0;
+                lastPercentiment = 0;
+                rollingSentiment.Clear();
+                zeroCycles = 0;
+            }
+
+            _settings.IsReplaying = true;
+            Trace.WriteLine($"Replay starting: {filePath}, start time: '{startTimeStr}'");
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    int callbackCount = 0;
+                    await ReplayController.Play(filePath, startTimeStr, (msg, ts) =>
+                    {
+                        if (callbackCount++ < 3)
+                            Trace.WriteLine($"Replay callback #{callbackCount}: ts={ts.UtcDateTime:O}");
+                        ProcessMessageSentiment(msg);
+                        Application.Current.Dispatcher.BeginInvoke(() =>
+                            _settings.ReplayCurrentTime = ts.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
+                    }, ct);
+                    Trace.WriteLine("Replay finished normally");
+                }
+                catch (OperationCanceledException)
+                {
+                    Trace.WriteLine("Replay stopped by user");
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine($"Replay error: {ex}");
+                    Application.Current.Dispatcher.Invoke(() =>
+                        MessageBox.Show($"Replay error: {ex.Message}", "Replay Error", MessageBoxButton.OK, MessageBoxImage.Error));
+                }
+                finally
+                {
+                    Application.Current.Dispatcher.Invoke(() => _settings.IsReplaying = false);
+                }
+            });
+        }
+
+        public void StopReplay()
+        {
+            _replayCts?.Cancel();
+        }
+
         public void DumpMessages()
         {
             var csv = new StringBuilder();
 
             foreach (var m in messages)
             {
-                var newLine = string.Format("\"{0}\",{1}", m.MessageText, m.MessageTime);
+                var escapedText = m.MessageText.Replace("\"", "\"\"");
+                var newLine = string.Format("\"{0}\",{1}", escapedText, m.MessageTime);
                 csv.AppendLine(newLine);
             }
             File.AppendAllText("chatLog.csv", csv.ToString());

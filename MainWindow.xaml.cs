@@ -115,5 +115,17 @@ namespace ChatGalvanometer
                     break;
             }
         }
+
+        private void replayStartStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (handler.Settings.IsReplaying)
+            {
+                handler.StopReplay();
+            }
+            else
+            {
+                handler.StartReplay(handler.Settings.ReplayFilename!, startTimeBox.Text);
+            }
+        }
     }
 }
