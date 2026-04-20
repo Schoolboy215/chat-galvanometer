@@ -95,15 +95,6 @@ namespace ChatGalvanometer
                                 break;
                             case "notification":
                                 string? text = parsedMessage?["payload"]?["event"]?["message"]?["text"]?.ToString();
-                                var isReply = parsedMessage?["payload"]?["event"]?["reply"];
-                                if (isReply != null && isReply.Type == JTokenType.Object && isReply.HasValues)
-                                {
-                                    int i = 1;
-                                }
-                                if (text.Contains("2026-04-19"))
-                                {
-                                    int i = 1;
-                                }
                                 if (text != null)
                                 {
                                     string asciiMessage = Regex.Replace(text, @"[^\u0020-\u007e]", "");
