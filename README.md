@@ -23,6 +23,10 @@ Chat Galvanometer connects to a Twitch channel via the EventSub WebSocket API an
 - A [Twitch Developer application](https://dev.twitch.tv/console) (for Client ID + OAuth)
 - A serial device connected (for the needle output)
 
+## What access does it need on Twitch?
+
+The application needs to be able to read channel chat messages on your behalf. It has no permission to view/modify your subscriptions or send messages. It does not have access to whispers. If you want to read more about what the scope entails, visit Twitch's [documentation](https://dev.twitch.tv/docs/authentication/scopes/) and look for `user:read:chat`
+
 ## Setup
 
 1. **Register a Twitch application** at [dev.twitch.tv/console](https://dev.twitch.tv/console). Set the OAuth redirect URI to `http://localhost:3000`. Note your **Client ID**.
@@ -32,16 +36,19 @@ Chat Galvanometer connects to a Twitch channel via the EventSub WebSocket API an
 3. **Click "Get Token"** — your browser will open to Twitch's login page. After authorizing, the token is captured automatically.
 
 4. **Enter your Twitch username** and click **Lookup** to fill in your User ID.
+    1. This needs to be the user you authorized the app for in step 3. Otherwise when you try to connect to a chat, you'll get an unauthorized error.
 
 5. **Enter the broadcaster's username** and click **Lookup** to fill in their ID.
+    1. This is the channel you want to monitor. It doesn't need to be your own, but can be.
 
-6. **Select your COM port** from the dropdown and click **Test** to verify the connection (the needle should sweep all the way from left to right and then back to center).
+6. **Select your COM port** from the list and click **Test** to verify the connection (the needle should sweep all the way from left to right and then back to center).
+    1. If your hardware wasn't plugged in when the application launched, it won't be listed. Restart the application with everything plugged in already.
 
 7. **Click Connect** to start listening to chat.
 
 ## Configuration
 
-Settings are saved to `settings.json` in the application directory. These are all maintainable within the application and should not require manual editing. Key fields:
+Settings are saved to `settings.json` in the application directory. These are all maintainable within the application and should not require manual editing. Listed here for reference only. Key fields:
 
 | Field | Description |
 |---|---|
@@ -79,7 +86,9 @@ The app sends sentiment values over serial as `{value}d` (e.g. `0.75d`), at 1152
 
 An Arduino sketch for a compatible galvanometer driver is included in `ChatGalvanometer_Hardware/ChatGalvanometer_Hardware.ino`. It reads the float value over serial and drives a galvanometer via PWM. Subtle wiggle occurs when the needle is holding on a value to add some life.
 
-Example schematic (exact resistance will vary based on the characteristics of your galvanometer)
+Example schematic. Exact resistance will vary based on the current range of your galvanometer and voltage of your controller. You'll want to pick resistance such that your maximum voltage/2 will give enough current to get to the far ends of the scale but not past.
+
 In the provided sketch, the reference pin `GALVO_ENABLE` is 24 and the PWM pin `GALVO_OUTPUT` is 25.
 `GALVO_MIN`, `GALVO_NEUTRAL`, and `GALVO_MAX` must all be between 0 and 256 and should be tuned to your specific galvanometer to get the needle to visually line up with the middle of the scale and the two extremes.
+
 ![Schematic](./ChatGalvanometer_Hardware/schematic.png)

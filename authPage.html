@@ -1,29 +1,115 @@
-﻿<html>
-<script>
-    const parsedHash = new URLSearchParams(
-        window.location.hash.substring(1)
-    );
-    if (parsedHash.get("access_token") == null) {
-        alert("Auth failed");
-    }
-    else {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://localhost:3000/authCode?access_token=' + parsedHash.get("access_token"));
+<html>
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
-        xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                console.log('Success:', JSON.parse(xhr.response));
-            } else {
-                console.error('Request failed with status:', xhr.status);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background: repeating-linear-gradient( 0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.15) 2px, rgba(0, 0, 0, 0.15) 4px );
+                pointer-events: none;
+                z-index: 10;
             }
-        };
 
-        xhr.onerror = function () {
-            console.error('Request failed');
-        };
+        .screen {
+            border: 2px solid #3a5a3a;
+            border-radius: 8px;
+            padding: 48px 56px;
+            max-width: 540px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 255, 80, 0.08), inset 0 0 60px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
 
-        xhr.send();
-    }
-</script>
-<p>Token received. You can close this window</p>
+        .label {
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            color: #2a6640;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        #status {
+            font-size: 15px;
+            color: #00cc55;
+            text-shadow: 0 0 10px rgba(0, 255, 80, 0.5);
+            line-height: 1.6;
+        }
+
+            #status.error {
+                color: #cc4400;
+                text-shadow: 0 0 10px rgba(255, 80, 0, 0.5);
+            }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #1a3a1a;
+            margin: 24px 0;
+        }
+
+        .footer {
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            color: #1a3a1a;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen">
+        <div class="label">Chat Galvanometer</div>
+        <p id="status">Completing authentication...</p>
+        <hr class="divider">
+        <div class="footer">Signal pending &mdash; stand by</div>
+    </div>
+    <script>
+        const status = document.getElementById("status");
+        const footer = document.querySelector(".footer");
+
+        const parsedHash = new URLSearchParams(
+            window.location.hash.substring(1)
+        );
+        const parsedQuery = new URLSearchParams(window.location.search);
+
+        if (parsedHash.get("access_token") == null) {
+            var errorText = ""
+            const errorDescription = parsedHash.get("error_description") || parsedQuery.get("error_description");
+            if (errorDescription) {
+                errorText = errorDescription;
+            }
+            status.textContent = "Authentication failed. No token was received. " + errorText;
+            status.classList.add("error");
+            footer.textContent = "Try again";
+        }
+        else {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:3000/authCode?access_token=' + parsedHash.get("access_token"));
+
+            xhr.onload = function () {
+                status.textContent = xhr.responseText;
+                footer.textContent = "Enjoy the app";
+            };
+
+            xhr.send();
+        }
+    </script>
+</body>
 </html>

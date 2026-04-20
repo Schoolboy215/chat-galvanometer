@@ -40,7 +40,7 @@ namespace ChatGalvanometer
                     {
                         string responseString = File.Exists(_htmlFilePath)
                         ? File.ReadAllText(_htmlFilePath)
-                        : "<html><body><h2>File Not Found</h2></body></html>";
+                        : "File Not Found";
 
                         byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                         context.Response.ContentLength64 = buffer.Length;
@@ -50,19 +50,32 @@ namespace ChatGalvanometer
                     else if(request.Url?.AbsolutePath == "/authCode")
                     {
                         string authCode = request.QueryString["access_token"]; // Get auth code
+                        string errorText = request.QueryString["error"]; // Check if error
 
-                        // Respond to the request
-                        string responseString = "<html><body><h2>Authentication Successful! You can close this window.</h2></body></html>";
-                        byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                        context.Response.ContentLength64 = buffer.Length;
-                        context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-                        context.Response.OutputStream.Close();
-                        OnAuthCodeReceived?.Invoke(authCode); // Fire event with the auth code
+                        if (authCode != "")
+                        {
+                            string responseString = "Authentication Successful! You can close this window.";
+                            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                            context.Response.StatusCode = 200;
+                            context.Response.ContentLength64 = buffer.Length;
+                            context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                            context.Response.OutputStream.Close();
+                            OnAuthCodeReceived?.Invoke(authCode); // Fire event with the auth code
+                        }
+                        else if (errorText != "")
+                        {
+                            string responseString = "Error: " + errorText;
+                            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                            context.Response.StatusCode = 404;
+                            context.Response.ContentLength64 = buffer.Length;
+                            context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                            context.Response.OutputStream.Close();
+                        }
                     }
                     else
                     {
                         // Respond to the request
-                        string responseString = "<html><body><h2>What are you doing?</h2></body></html>";
+                        string responseString = "What are you doing?";
                         byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                         context.Response.ContentLength64 = buffer.Length;
                         context.Response.OutputStream.Write(buffer, 0, buffer.Length);
