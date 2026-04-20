@@ -25,6 +25,11 @@ jobs:
       - name: Zip release
         run: Compress-Archive -Path publish\ChatGalvanometer.exe, publish\authPage.html -DestinationPath ChatGalvanometer.zip
 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Generate Changelog
         uses: Bullrich/generate-release-changelog@master
         id: changelog
