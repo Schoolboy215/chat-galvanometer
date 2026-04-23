@@ -6,6 +6,15 @@ A Windows desktop app that reads Twitch chat in real-time, scores message sentim
 
 Chat Galvanometer connects to a Twitch channel via the EventSub WebSocket API and watches for chat messages containing your chosen "good" or "bad" keywords. It maintains a rolling sentiment score over a configurable time window and continuously sends that score to a serial device for physical display.
 
+<details>
+    <summary>Expand to see screenshot of app and closeup video of the needle</summary>
+    <img width="688" height="536" alt="AppScreenshot" src="https://github.com/user-attachments/assets/6d168971-9cad-4af8-8fc7-b1aff22e9a0e" />
+    Link to short video:
+    https://github.com/user-attachments/assets/deeef8b7-e250-41ef-afb8-927bc859aefb
+</details>
+
+
+
 ## Features
 
 - OAuth2 authentication with Twitch (browser-based, no manual token copying)
